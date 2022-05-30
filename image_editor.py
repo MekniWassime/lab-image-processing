@@ -7,7 +7,9 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from tkinter import *
 from utility import *
 
+
 image = readPGM("./assets/portraitWritten.pgm")
+image_stack = []
 
 normal_state = tk.ACTIVE
 binary_state = tk.DISABLED
@@ -31,8 +33,11 @@ def switch_states():
         else:
             child['state'] = normal_state
 
-def update_image(newimage):
+def update_image(newimage, append_to_stack = True):
     global image
+    global image_stack
+    if(append_to_stack):
+        image_stack.append(image)
     image = newimage
     im.set_data(image)
     canvas.draw()
@@ -41,12 +46,18 @@ def update_image(newimage):
     ax1.plot(hist)
     bar1.draw()
 
+def undo():
+    global image_stack
+    newimage = image_stack.pop()
+    update_image(newimage, False)
 
 root= tk.Tk()
 button1 = tk.Button(root, text='Open', command=lambda:[update_image(open_file()), switch_states()])
 button2 = tk.Button(root, text='Save As', command=lambda:save_file(image))#implement this
+button3 = tk.Button(root, text='Undo', command=undo)
 button1.grid(row=0, column=1)
 button2.grid(row=0, column=2)
+button3.grid(row=0, column=3)
 
 fig = plt.figure(1,figsize=(6,4))
 im = plt.imshow(image, cmap="gray") # later use a.set_data(new_data)
@@ -57,13 +68,13 @@ plt.close(1)
 # a tk.DrawingArea
 canvas = FigureCanvasTkAgg(fig, master=root)
 canvas.draw()
-canvas.get_tk_widget().grid(row=1, column=1,columnspan=2)
+canvas.get_tk_widget().grid(row=1, column=1,columnspan=3)
 
 hist = histogram(image)
 figure1 = plt.Figure(figsize=(6,3), dpi=100)
 ax1 = figure1.add_subplot(111)
 bar1 = FigureCanvasTkAgg(figure1, root)
-bar1.get_tk_widget().grid(row=2, column=1, columnspan=2)
+bar1.get_tk_widget().grid(row=2, column=1, columnspan=3)
 ax1.plot(hist)
 
 side_frame = Frame(root)
